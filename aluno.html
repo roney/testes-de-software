@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EduPortal — Área do aluno</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <div class="marca-icone">E</div>
+      <h1>EduPortal</h1>
+    </div>
+    <nav>
+      <a href="aluno.html" class="ativo">Meu boletim</a>
+      <a href="#turma">Minha turma</a>
+      <a href="professor.html" id="link-professor">Área do professor</a>
+    </nav>
+    <div class="usuario">
+      <div><span id="usuario-nome"></span><small id="usuario-perfil"></small></div>
+      <button class="btn" id="btn-sair" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <h2 id="boas-vindas"></h2>
+    <p class="legenda">Semestre 2026.2 · Análise e Desenvolvimento de Sistemas</p>
+
+    <div class="cartoes">
+      <div class="cartao"><div class="rotulo">Matrícula</div><div class="valor" id="matricula"></div></div>
+      <div class="cartao"><div class="rotulo">CPF</div><div class="valor" id="cpf"></div></div>
+      <div class="cartao"><div class="rotulo">Frequência</div><div class="valor" id="freq"></div></div>
+      <div class="cartao"><div class="rotulo">E-mail</div><div class="valor" id="email" style="font-size:15px;word-break:break-all"></div></div>
+    </div>
+
+    <section class="secao">
+      <h3>Boletim</h3>
+      <p class="legenda">Notas lançadas pelos professores.</p>
+      <div class="tabela-rolagem">
+        <table>
+          <thead><tr><th>Disciplina</th><th>N1</th><th>N2</th><th>Média</th><th>Situação</th></tr></thead>
+          <tbody id="boletim"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="secao" id="turma">
+      <h3>Minha turma</h3>
+      <p class="legenda">Colegas matriculados na mesma turma, para formação de grupos de estudo.</p>
+      <div class="tabela-rolagem">
+        <table>
+          <thead><tr><th>Nome</th><th>Matrícula</th><th>CPF</th><th>E-mail</th></tr></thead>
+          <tbody id="colegas"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer>EduPortal · sistema fictício para fins didáticos</footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    const u = usuarioDaSessao();
+    if (!u) {
+      window.location.replace("index.html");
+    } else if (u.perfil === "professor") {
+      window.location.replace("professor.html");
+    } else {
+      preencherCabecalho(u);
+      document.getElementById("link-professor").style.display = "none";
+
+      const notas = lerNotas()[u.matricula];
+      document.getElementById("boas-vindas").textContent = "Olá, " + u.nome.split(" ")[0] + "!";
+      document.getElementById("matricula").textContent = u.matricula;
+      document.getElementById("cpf").textContent = mascararCpf(u.cpf);
+      document.getElementById("freq").textContent = notas.freq + "%";
+      document.getElementById("email").textContent = u.email;
+
+      document.getElementById("boletim").innerHTML = DISCIPLINAS.map((d) => {
+        const n = notas[d];
+        const m = media(n);
+        const s = situacao(m, notas.freq);
+        return `<tr><td>${esc(d)}</td><td>${fmt(n[0])}</td><td>${fmt(n[1])}</td><td><strong>${fmt(m)}</strong></td>
+                <td><span class="etiqueta ${s.cls}">${s.txt}</span></td></tr>`;
+      }).join("");
+
+      document.getElementById("colegas").innerHTML = USUARIOS
+        .filter((x) => x.perfil === "aluno" && x.login !== u.login)
+        .map((x) => `<tr><td>${esc(x.nome)}</td><td>${esc(x.matricula)}</td><td>${esc(x.cpf)}</td><td>${esc(x.email)}</td></tr>`)
+        .join("");
+    }
+  </script>
+</body>
+</html>

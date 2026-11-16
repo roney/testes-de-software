@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EduPortal — Área do professor</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <div class="marca-icone">E</div>
+      <h1>EduPortal</h1>
+    </div>
+    <nav>
+      <a href="professor.html" class="ativo">Lançar notas</a>
+    </nav>
+    <div class="usuario">
+      <div><span id="usuario-nome"></span><small id="usuario-perfil"></small></div>
+      <button class="btn" id="btn-sair" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <h2>Área do professor</h2>
+    <p class="legenda">Lançamento de notas · Turma ADS 2026.2</p>
+
+    <section class="secao">
+      <h3>Disciplina</h3>
+      <p class="legenda">Selecione a disciplina para editar as notas da turma.</p>
+      <select id="disciplina" style="padding:10px 12px;border-radius:8px;border:1px solid var(--borda);font-size:15px"></select>
+    </section>
+
+    <section class="secao">
+      <h3>Notas da turma</h3>
+      <p class="legenda">As alterações ficam visíveis para os alunos após salvar.</p>
+      <div class="tabela-rolagem">
+        <table>
+          <thead><tr><th>Aluno</th><th>Matrícula</th><th>N1</th><th>N2</th><th>Média</th><th>Frequência</th></tr></thead>
+          <tbody id="notas"></tbody>
+        </table>
+      </div>
+      <div class="acoes">
+        <button class="btn" id="btn-salvar" type="button">Salvar notas</button>
+        <button class="btn btn-secundario" id="btn-restaurar" type="button">Restaurar notas originais</button>
+        <span class="aviso" id="aviso"></span>
+      </div>
+    </section>
+  </main>
+  <footer>EduPortal · sistema fictício para fins didáticos</footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    const u = usuarioDaSessao();
+    if (!u) {
+      window.location.replace("index.html");
+    } else {
+      preencherCabecalho(u);
+      let notas = lerNotas();
+      const sel = document.getElementById("disciplina");
+      sel.innerHTML = DISCIPLINAS.map((d) => `<option>${esc(d)}</option>`).join("");
+
+      function desenhar() {
+        const d = sel.value;
+        document.getElementById("notas").innerHTML = USUARIOS.filter((x) => x.perfil === "aluno").map((a) => {
+          const n = notas[a.matricula][d];
+          return `<tr data-mat="${a.matricula}">
+            <td>${esc(a.nome)}</td><td>${a.matricula}</td>
+            <td><input type="number" min="0" max="10" step="0.5" value="${n[0]}" data-i="0"></td>
+            <td><input type="number" min="0" max="10" step="0.5" value="${n[1]}" data-i="1"></td>
+            <td><strong>${fmt(media(n))}</strong></td>
+            <td>${notas[a.matricula].freq}%</td></tr>`;
+        }).join("");
+      }
+      sel.addEventListener("change", desenhar);
+      desenhar();
+
+      document.getElementById("btn-salvar").addEventListener("click", () => {
+        const d = sel.value;
+        document.querySelectorAll("#notas tr").forEach((tr) => {
+          tr.querySelectorAll("input").forEach((inp) => {
+            let v = parseFloat(inp.value);
+            if (isNaN(v)) v = 0;
+            v = Math.min(10, Math.max(0, v));
+            notas[tr.dataset.mat][d][+inp.dataset.i] = v;
+          });
+        });
+        salvarNotas(notas);
+        desenhar();
+        document.getElementById("aviso").textContent = "Notas salvas.";
+        setTimeout(() => (document.getElementById("aviso").textContent = ""), 2500);
+      });
+
+      document.getElementById("btn-restaurar").addEventListener("click", () => {
+        localStorage.removeItem("eduportal_notas");
+        notas = lerNotas();
+        desenhar();
+        document.getElementById("aviso").textContent = "Notas originais restauradas.";
+      });
+    }
+  </script>
+</body>
+</html>

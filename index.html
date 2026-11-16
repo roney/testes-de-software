@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EduPortal — Entrar</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="login-pagina">
+    <form class="login-caixa" id="form-login" novalidate>
+      <div class="marca">
+        <div class="marca-icone">E</div>
+        <h1>EduPortal</h1>
+      </div>
+      <p class="subtitulo">Sistema acadêmico (fictício)</p>
+
+      <div class="abas" role="tablist">
+        <button type="button" class="ativa" data-perfil="aluno">Sou aluno</button>
+        <button type="button" data-perfil="professor">Sou professor</button>
+      </div>
+
+      <label for="login">Usuário</label>
+      <input type="text" id="login" autocomplete="username" placeholder="nome.sobrenome">
+
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" autocomplete="current-password">
+
+      <button class="btn btn-largo" type="submit">Entrar</button>
+      <div class="erro" id="erro"></div>
+
+      <div class="contas">
+        <strong>Contas para teste</strong><br>
+        <code>ana.souza</code> / <code>aluno123</code><br>
+        <code>bruno.lima</code> / <code>aluno123</code>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    let perfil = "aluno";
+    document.querySelectorAll(".abas button").forEach((b) => {
+      b.addEventListener("click", () => {
+        document.querySelectorAll(".abas button").forEach((x) => x.classList.remove("ativa"));
+        b.classList.add("ativa");
+        perfil = b.dataset.perfil;
+      });
+    });
+
+    document.getElementById("form-login").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const erro = document.getElementById("erro");
+      const login = document.getElementById("login").value;
+      const senha = document.getElementById("senha").value;
+      if (!login || !senha) {
+        erro.textContent = "Preencha usuário e senha.";
+        erro.classList.add("visivel");
+        return;
+      }
+      const r = entrar(login, senha, perfil);
+      if (!r.ok) {
+        erro.textContent = r.msg;
+        erro.classList.add("visivel");
+        document.getElementById("senha").value = "";
+        return;
+      }
+      window.location.href = r.destino;
+    });
+  </script>
+</body>
+</html>
